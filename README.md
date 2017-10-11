@@ -1,4 +1,7 @@
-# PostSelectionInference.jl
+# Post Selection Inference in Julia
+
+[![Build Status](https://travis-ci.org/crsl4/PostSelectionInference.jl.svg)](https://travis-ci.org/crsl4/PostSelectionInference.jl)
+
 Julia translation to [selective-inference/R-software](https://github.com/selective-inference/R-software)
 
 ```julia
