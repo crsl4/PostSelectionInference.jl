@@ -1,0 +1,10 @@
+language: julia
+os:
+#  - linux
+  - osx
+julia:
+#  - release
+ - 0.6
+notifications:
+  email: false
+'
