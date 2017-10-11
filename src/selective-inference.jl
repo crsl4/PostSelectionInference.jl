@@ -13,6 +13,8 @@
 
 
 using DataFrames ##for isna function
+global DEBUG = false #for debugging only
+
 ## ---------------------------------------------------------------------------------------
 ## types
 ## ---------------------------------------------------------------------------------------
@@ -369,7 +371,7 @@ function fixedLogitLassoInference(X,y,intercept,beta,lambda;alpha=0.1::Number, t
     #  x = obj$x
     #  y = obj$y
 
-    m=beta.!=0  #active set
+    m = beta.!=0  #active set
     vars = (abs.(beta) .> (tolbeta ./ sqrt.(sum(X .* X,1)))')[:,1]
     if(sum(vars)==0)
         error("Empty model")
@@ -378,17 +380,25 @@ function fixedLogitLassoInference(X,y,intercept,beta,lambda;alpha=0.1::Number, t
 
     bhat = Vector(beta[m])
     unshift!(bhat,intercept) ## intercept + active terms
-    s2=sign.(bhat)
+    DEBUG && @show bhat
+    s2 = sign.(bhat)
     lam2m = diagm(vcat(0.0,fill(lambda,sum(m)))) ## create diag matrix with lambda
+    DEBUG && @show lam2m
 
     xxm = hcat(fill(1,size(X,1)),X[:,m]) ## design matrix
+    DEBUG && @show xxm
     etahat = xxm * bhat
+    DEBUG && @show etahat
     prhat = exp.(etahat) ./ (1 + exp.(etahat))
-    ww=prhat.*(1-prhat)
+    DEBUG && @show prhat
+    ww = prhat.*(1-prhat)
+    DEBUG && @show ww
 
     #check KKT
-    z=etahat+(y-prhat)./ww
+    z = etahat+(y-prhat)./ww
+    DEBUG && @show z
     g = (X' * diagm(1./ww)) * (z-etahat)/lambda
+    DEBUG && @show g
     if( any(abs.(g) .> 1+tolkkt) )
         warn(string("Solution beta does not satisfy the KKT conditions (to within specified tolerances): ",tolkkt))
     end
@@ -401,15 +411,22 @@ function fixedLogitLassoInference(X,y,intercept,beta,lambda;alpha=0.1::Number, t
 
     #constraints for active variables
     a = (xxm' * diagm(1./ww)) * xxm
+    DEBUG && @show a
     MM = pinv(a)
+    DEBUG && @show MM
     gm = vcat(0.0,-g[m]*lambda) # OA: gradient at LASSO solution, first entry is 0 because intercept is unpenalized
                             # at exact LASSO solution it should be s2[-1]
+    DEBUG && @show gm
     dbeta = MM * gm
+    DEBUG && @show dbeta
 
     bbar = bhat - dbeta
+    DEBUG && @show bbar
 
-    A1=-(diagm(s2))[2:end,:]
-    b1= (s2 .* dbeta)[2:end]
+    A1 = -(diagm(s2))[2:end,:]
+    DEBUG && @show A1
+    b1 = (s2 .* dbeta)[2:end]
+    DEBUG && @show b1
 
     tolpoly = 0.01
 
@@ -424,12 +441,14 @@ function fixedLogitLassoInference(X,y,intercept,beta,lambda;alpha=0.1::Number, t
 
         # compute p-values
         pv0,vlo0,vup0,sd0,te0 = mypvalues(bbar, A1, b1, vj, Sigma=MM)
+        DEBUG && @show pv0,vlo0,vup0,sd0,te0
         vpv[jj] = pv0
         vvlo[jj] = vlo0
         vvup[jj] = vup0
         vsd[jj] = sd0
 
         int0,tail0 = myinterval(vlo0,vup0,sd0,te0,alpha=alpha)
+        DEBUG && @show int0,tail0
         vci[jj,:] = int0
         vtailarea[jj,:] = tail0
     end
@@ -437,6 +456,7 @@ function fixedLogitLassoInference(X,y,intercept,beta,lambda;alpha=0.1::Number, t
     coef0 = bbar[2:end]
     se0 = sqrt.(diag(MM)[2:end])
     zscore0 = coef0./se0
+    DEBUG && @show coef0,se0,zscore0
 
     out = fixedLogitLasso(lambda,vpv,vci,vtailarea,vvlo,vvup,vsd,vars,alpha,coef0,zscore0,MM)
     return out
