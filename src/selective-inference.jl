@@ -11,10 +11,6 @@
 ## - test later with the same example in R to compare to R results: still not working
 ## - can we make them more efficient? @profile
 
-
-using DataFrames ##for isna function
-global DEBUG = false #for debugging only
-
 ## ---------------------------------------------------------------------------------------
 ## types
 ## ---------------------------------------------------------------------------------------
@@ -34,7 +30,6 @@ struct fixedLogitLasso
   MM::AbstractArray
 end
 
-import Base.show
 
 function Base.show(io::IO, out::fixedLogitLasso)
     vars = find(x->x==true,out.vars)
