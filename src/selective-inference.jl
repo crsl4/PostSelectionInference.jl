@@ -139,7 +139,7 @@ end
 
 ## mean=Vector(param_grid[2:3])
 ## fixit: can we combine the two tnormSurv functions?
-function tnormSurv(zz, mean::Union{Vector{Int},Vector{Float64}}, sd, aa, bb)
+function tnormSurv(zz, mean::AbstractArray, sd, aa, bb)
     zz = max(min(zz,bb),aa)
 
     # OA: Check silly boundary cases
